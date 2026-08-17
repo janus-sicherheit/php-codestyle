@@ -93,3 +93,151 @@ class InvalidDocblockBoundary {
 	/** @var string */
 	public string $name = 'x';
 }
+
+/**
+ * Central identity record managed by the auth service.
+ * A User only represents global identity (who someone is); roles and
+ * permissions are deliberately not modeled here and remain the
+ * responsibility of the individual portals.
+ */
+#[ORM\Entity]
+#[ORM\Table(name: 'users')]
+#[ORM\UniqueConstraint(name: 'uniq_username', columns: ['username'])]
+#[ORM\UniqueConstraint(name: 'uniq_email', columns: ['email'])]
+class User {
+	/**
+	 * Current lifecycle status of the account.
+	 *
+	 * @var \App\Enum\UserStatus
+	 */
+	#[ORM\Column(type: 'string', enumType: UserStatus::class)]
+	public(set) UserStatus $status;
+	/**
+	 * Temporary lock state, independent of {@see self::$status}.
+	 *
+	 * @var \App\Entity\Embeddable\AccountLock
+	 */
+	#[ORM\Embedded(class: AccountLock::class)]
+	protected(set) AccountLock $accountLock;
+
+	/**
+	 * Timestamp of the last modification to this record.
+	 *
+	 * @var \DateTimeImmutable
+	 */
+	#[ORM\Column(type: 'datetime_immutable')]
+	private(set) DateTimeImmutable $updatedAt;
+	/**
+	 * Timestamp the account was deleted, if applicable.
+	 *
+	 * @var \DateTimeImmutable|null
+	 */
+	#[ORM\Column(type: 'datetime_immutable', nullable: true)]
+	private(set) ?DateTimeImmutable $deletedAt = null;
+
+
+	/**
+	 * @param \Symfony\Component\Uid\Uuid $id Immutable global identifier for this user.
+	 * @param string $username Unique login name.
+	 * @param string $email Unique email address, independent of username.
+	 * @param string $firstName Given name.
+	 * @param string $lastName Family name.
+	 * @param \App\Entity\Embeddable\PasswordCredential $passwordCredential Initial password credential.
+	 * @param \DateTimeImmutable $createdAt Timestamp this record was created; also used as the initial value for {@see self::$updatedAt}.
+	 */
+	public function __construct(
+		#[ORM\Id]
+		#[ORM\Column(type: 'uuid', unique: true)]
+		private(set) readonly Uuid $id,
+		#[ORM\Column(type: 'string', length: 180)]
+		private(set) readonly string $username,
+		#[ORM\Column(type: 'string', length: 180)]
+		private(set) readonly string $email,
+		#[ORM\Column(type: 'string', length: 120)]
+		private(set) readonly string $firstName,
+		#[ORM\Column(type: 'string', length: 120)]
+		private(set) readonly string $lastName,
+		#[ORM\Embedded(class: PasswordCredential::class)]
+		private(set) readonly PasswordCredential $passwordCredential,
+		#[ORM\Column(type: 'datetime_immutable')]
+		private(set) readonly DateTimeImmutable $createdAt,
+	) {
+		$this->accountLock = new AccountLock();
+		$this->status = UserStatus::ACTIVE;
+		$this->updatedAt = $this->createdAt;
+	}
+}
+
+/**
+ * Central identity record managed by the auth service.
+ * A User only represents global identity (who someone is); roles and
+ * permissions are deliberately not modeled here and remain the
+ * responsibility of the individual portals.
+ */
+#[ORM\Entity]
+#[ORM\Table(name: 'users')]
+#[ORM\UniqueConstraint(name: 'uniq_username', columns: ['username'])]
+#[ORM\UniqueConstraint(name: 'uniq_email', columns: ['email'])]
+class User {
+	/**
+	 * Current lifecycle status of the account.
+	 *
+	 * @var \App\Enum\UserStatus
+	 */
+	#[ORM\Column(type: 'string', enumType: UserStatus::class)]
+	private(set) UserStatus $status;
+
+	/**
+	 * Temporary lock state, independent of {@see self::$status}.
+	 *
+	 * @var \App\Entity\Embeddable\AccountLock
+	 */
+	#[ORM\Embedded(class: AccountLock::class)]
+	private(set) AccountLock $accountLock;
+	/**
+	 * Timestamp of the last modification to this record.
+	 *
+	 * @var \DateTimeImmutable
+	 */
+	#[ORM\Column(type: 'datetime_immutable')]
+	private(set) DateTimeImmutable $updatedAt;
+	/**
+	 * Timestamp the account was deleted, if applicable.
+	 *
+	 * @var \DateTimeImmutable|null
+	 */
+	#[ORM\Column(type: 'datetime_immutable', nullable: true)]
+	private(set) ?DateTimeImmutable $deletedAt = null;
+
+
+	/**
+	 * @param \Symfony\Component\Uid\Uuid $id Immutable global identifier for this user.
+	 * @param string $username Unique login name.
+	 * @param string $email Unique email address, independent of username.
+	 * @param string $firstName Given name.
+	 * @param string $lastName Family name.
+	 * @param \App\Entity\Embeddable\PasswordCredential $passwordCredential Initial password credential.
+	 * @param \DateTimeImmutable $createdAt Timestamp this record was created; also used as the initial value for {@see self::$updatedAt}.
+	 */
+	public function __construct(
+		#[ORM\Id]
+		#[ORM\Column(type: 'uuid', unique: true)]
+		private(set) readonly Uuid $id,
+		#[ORM\Column(type: 'string', length: 180)]
+		private(set) readonly string $username,
+		#[ORM\Column(type: 'string', length: 180)]
+		private(set) readonly string $email,
+		#[ORM\Column(type: 'string', length: 120)]
+		private(set) readonly string $firstName,
+		#[ORM\Column(type: 'string', length: 120)]
+		private(set) readonly string $lastName,
+		#[ORM\Embedded(class: PasswordCredential::class)]
+		private(set) readonly PasswordCredential $passwordCredential,
+		#[ORM\Column(type: 'datetime_immutable')]
+		private(set) readonly DateTimeImmutable $createdAt,
+	) {
+		$this->accountLock = new AccountLock();
+		$this->status = UserStatus::ACTIVE;
+		$this->updatedAt = $this->createdAt;
+	}
+}
