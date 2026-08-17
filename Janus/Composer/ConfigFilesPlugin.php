@@ -45,7 +45,7 @@ final class ConfigFilesPlugin implements PluginInterface, EventSubscriberInterfa
 	public function syncConfigFiles(Event $event): void {
 		$vendorDir = (string)$this->composer->getConfig()->get('vendor-dir');
 		$projectRoot = dirname($vendorDir);
-		$packageRoot = dirname(__DIR__, 3);
+		$packageRoot = dirname(__DIR__, 2);
 
 		$filesToCopy = [
 			'.editorconfig',
