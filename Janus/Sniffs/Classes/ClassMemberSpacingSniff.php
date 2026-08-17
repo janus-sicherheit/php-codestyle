@@ -6,11 +6,6 @@ namespace Janus\Sniffs\Classes;
 
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\Sniff;
-use const T_ANON_CLASS;
-use const T_ATTRIBUTE_END;
-use const T_DOC_COMMENT_CLOSE_TAG;
-use const T_ENUM;
-use const T_SEMICOLON;
 
 
 /**

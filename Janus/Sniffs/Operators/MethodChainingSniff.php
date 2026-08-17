@@ -6,9 +6,6 @@ namespace Janus\Sniffs\Operators;
 
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\Sniff;
-use const T_CLOSE_PARENTHESIS;
-use const T_OPEN_PARENTHESIS;
-use const T_SEMICOLON;
 
 
 /**

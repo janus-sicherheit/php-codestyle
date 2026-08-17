@@ -96,7 +96,7 @@ final class ConfigFilesPlugin implements PluginInterface, EventSubscriberInterfa
 		}
 
 		$processExecutor = new ProcessExecutor($this->io);
-		$standardPath = 'vendor/janus-sicherheit/php-codestyle';
+		$standardPath = '../../janus-sicherheit/php-codestyle';
 		$installedPaths = $this->buildInstalledPaths($processExecutor, $projectRoot, $phpcsScript, $standardPath);
 
 		$setCommand = sprintf(

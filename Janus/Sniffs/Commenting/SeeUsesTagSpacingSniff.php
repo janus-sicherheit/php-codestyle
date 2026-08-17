@@ -6,8 +6,6 @@ namespace Janus\Sniffs\Commenting;
 
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\Sniff;
-use const T_DOC_COMMENT_TAG;
-use const T_DOC_COMMENT_WHITESPACE;
 
 
 /**

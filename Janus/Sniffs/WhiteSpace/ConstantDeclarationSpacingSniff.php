@@ -9,11 +9,6 @@ namespace Janus\Sniffs\WhiteSpace;
 
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\Sniff;
-use const T_COMMA;
-use const T_NAME_FULLY_QUALIFIED;
-use const T_NAME_QUALIFIED;
-use const T_NULLABLE;
-use const T_SEMICOLON;
 
 
 /**

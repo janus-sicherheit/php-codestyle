@@ -18,7 +18,7 @@ On `composer install` and `composer update`, this package copies the following f
 ## Usage
 
 ```bash
-vendor/bin/phpcs src
+vendor/bin/phpcs Janus
 ```
 
 ## What the sniffs do
