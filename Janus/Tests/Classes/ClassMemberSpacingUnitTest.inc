@@ -185,7 +185,7 @@ class User {
 	 * @var \App\Enum\UserStatus
 	 */
 	#[ORM\Column(type: 'string', enumType: UserStatus::class)]
-	private(set) UserStatus $status;
+	public private(set) UserStatus $status;
 
 	/**
 	 * Temporary lock state, independent of {@see self::$status}.
@@ -193,21 +193,21 @@ class User {
 	 * @var \App\Entity\Embeddable\AccountLock
 	 */
 	#[ORM\Embedded(class: AccountLock::class)]
-	private(set) AccountLock $accountLock;
+	public private(set) AccountLock $accountLock;
 	/**
 	 * Timestamp of the last modification to this record.
 	 *
 	 * @var \DateTimeImmutable
 	 */
 	#[ORM\Column(type: 'datetime_immutable')]
-	private(set) DateTimeImmutable $updatedAt;
+	public private(set) DateTimeImmutable $updatedAt;
 	/**
 	 * Timestamp the account was deleted, if applicable.
 	 *
 	 * @var \DateTimeImmutable|null
 	 */
 	#[ORM\Column(type: 'datetime_immutable', nullable: true)]
-	private(set) ?DateTimeImmutable $deletedAt = null;
+	public private(set) ?DateTimeImmutable $deletedAt = null;
 
 
 	/**
