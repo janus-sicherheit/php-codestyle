@@ -94,12 +94,7 @@ class InvalidDocblockBoundary {
 	public string $name = 'x';
 }
 
-/**
- * Central identity record managed by the auth service.
- * A User only represents global identity (who someone is); roles and
- * permissions are deliberately not modeled here and remain the
- * responsibility of the individual portals.
- */
+// Invalid: no blank lines between blocks of different visibility
 #[ORM\Entity]
 #[ORM\Table(name: 'users')]
 #[ORM\UniqueConstraint(name: 'uniq_username', columns: ['username'])]
@@ -126,14 +121,14 @@ class User {
 	 * @var \DateTimeImmutable
 	 */
 	#[ORM\Column(type: 'datetime_immutable')]
-	private(set) DateTimeImmutable $updatedAt;
+	protected private(set) DateTimeImmutable $updatedAt;
 	/**
 	 * Timestamp the account was deleted, if applicable.
 	 *
 	 * @var \DateTimeImmutable|null
 	 */
 	#[ORM\Column(type: 'datetime_immutable', nullable: true)]
-	private(set) ?DateTimeImmutable $deletedAt = null;
+	protected private(set) ?DateTimeImmutable $deletedAt = null;
 
 
 	/**
@@ -168,17 +163,12 @@ class User {
 	}
 }
 
-/**
- * Central identity record managed by the auth service.
- * A User only represents global identity (who someone is); roles and
- * permissions are deliberately not modeled here and remain the
- * responsibility of the individual portals.
- */
+// Invalid: no blank lines between blocks of different visibility and blank lines between same visibility blocks
 #[ORM\Entity]
 #[ORM\Table(name: 'users')]
 #[ORM\UniqueConstraint(name: 'uniq_username', columns: ['username'])]
 #[ORM\UniqueConstraint(name: 'uniq_email', columns: ['email'])]
-class User {
+class AnotherUser {
 	/**
 	 * Current lifecycle status of the account.
 	 *
@@ -200,14 +190,14 @@ class User {
 	 * @var \DateTimeImmutable
 	 */
 	#[ORM\Column(type: 'datetime_immutable')]
-	public private(set) DateTimeImmutable $updatedAt;
+	protected private(set) DateTimeImmutable $updatedAt;
 	/**
 	 * Timestamp the account was deleted, if applicable.
 	 *
 	 * @var \DateTimeImmutable|null
 	 */
 	#[ORM\Column(type: 'datetime_immutable', nullable: true)]
-	public private(set) ?DateTimeImmutable $deletedAt = null;
+	protected private(set) ?DateTimeImmutable $deletedAt = null;
 
 
 	/**
