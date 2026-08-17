@@ -1,17 +1,24 @@
-# awyiss/phpcs-sniffs
+# janus-sicherheit/php-codestyle
 
-PHPCS standard with custom rules for Awyiss projects.
+Custom code style standards, code inspections and PHP_CodeSniffer sniffs for JANUS projects
 
 ## Installation
 
 ```bash
-composer require awyiss/phpcs-sniffs
+composer require janus-sicherheit/php-codestyle
 ```
+
+On `composer install` and `composer update`, this package copies the following files into the consumer project root (overwriting existing files):
+
+- `.editorconfig`
+- `code_inspection.xml`
+- `code_style.xml`
+- `phpcs.xml`
 
 ## Usage
 
 ```bash
-vendor/bin/phpcs --standard=Awyiss src
+vendor/bin/phpcs src
 ```
 
 ## What the sniffs do

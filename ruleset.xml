@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
-<ruleset name="Awyiss">
-    <description>Custom PHP_CodeSniffer standard for Awyiss projects.</description>
+<ruleset name="Janus">
+    <description>Custom code style standards, code inspections and PHP_CodeSniffer sniffs for JANUS projects.</description>
 
-    <rule ref="./src/Awyiss/Sniffs/Arrays"/>
-    <rule ref="./src/Awyiss/Sniffs/Classes"/>
-    <rule ref="./src/Awyiss/Sniffs/Commenting"/>
-    <rule ref="./src/Awyiss/Sniffs/Functions"/>
-    <rule ref="./src/Awyiss/Sniffs/Operators"/>
-    <rule ref="./src/Awyiss/Sniffs/WhiteSpace"/>
+    <rule ref="./src/Janus/Sniffs/Arrays"/>
+    <rule ref="./src/Janus/Sniffs/Classes"/>
+    <rule ref="./src/Janus/Sniffs/Commenting"/>
+    <rule ref="./src/Janus/Sniffs/Functions"/>
+    <rule ref="./src/Janus/Sniffs/Operators"/>
+    <rule ref="./src/Janus/Sniffs/WhiteSpace"/>
 </ruleset>
 

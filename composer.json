@@ -1,7 +1,7 @@
 {
-  "name": "awyiss/phpcs-sniffs",
-  "description": "Custom PHP_CodeSniffer standard and sniffs for Awyiss projects",
-  "type": "phpcodesniffer-standard",
+  "name": "janus-sicherheit/php-codestyle",
+  "description": "Custom code style standards, code inspections and PHP_CodeSniffer sniffs for JANUS projects",
+  "type": "composer-plugin",
   "license": "MIT",
   "keywords": [
     "phpcs",
@@ -11,30 +11,34 @@
   ],
   "require": {
     "php": ">=8.4",
-    "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+    "composer-plugin-api": "^2.0",
     "squizlabs/php_codesniffer": "^4.0.4"
   },
   "require-dev": {
+    "composer/composer": "^2.8",
     "phpunit/phpunit": "^13.0"
   },
   "autoload": {
     "psr-4": {
-      "Awyiss\\": "src/Awyiss/"
+      "Janus\\": "src/Janus/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Awyiss\\Tests\\": "src/Awyiss/Tests/"
+      "Janus\\Tests\\": "src/Janus/Tests/"
     }
   },
   "config": {
     "allow-plugins": {
-      "dealerdirect/phpcodesniffer-composer-installer": true
+      "janus-sicherheit/php-codestyle": true
     }
   },
+  "extra": {
+    "class": "Janus\\Composer\\ConfigFilesPlugin"
+  },
   "scripts": {
-    "lint": "phpcs -p --standard=ruleset.xml src/Awyiss/Sniffs",
-    "lint:tests": "phpcs -p --standard=ruleset.xml src/Awyiss/Tests",
+    "lint": "phpcs -p --standard=ruleset.xml src/Janus/Sniffs",
+    "lint:tests": "phpcs -p --standard=ruleset.xml src/Janus/Tests",
     "test": "phpunit --colors=always"
   }
 }

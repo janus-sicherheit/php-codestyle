@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/13.0/phpunit.xsd"
-         bootstrap="src/Awyiss/Tests/bootstrap.php"
+         bootstrap="src/Janus/Tests/bootstrap.php"
          colors="true"
          cacheDirectory=".phpunit.cache"
          displayDetailsOnTestsThatTriggerWarnings="true"
@@ -9,17 +9,17 @@
          failOnWarning="true"
          failOnRisky="true">
     <testsuites>
-        <testsuite name="Awyiss PHPCS Sniffs">
-            <file>src/Awyiss/Tests/Arrays/NoInlineCommentedArrayItemUnitTest.php</file>
-            <file>src/Awyiss/Tests/Classes/ClassMemberSpacingUnitTest.php</file>
-            <file>src/Awyiss/Tests/Commenting/SeeUsesTagSpacingUnitTest.php</file>
-            <file>src/Awyiss/Tests/Commenting/VariableCommentUnitTest.php</file>
-            <file>src/Awyiss/Tests/Functions/ArrowFunctionDeclarationUnitTest.php</file>
-            <file>src/Awyiss/Tests/Operators/MethodChainingUnitTest.php</file>
-            <file>src/Awyiss/Tests/WhiteSpace/ArrayUnionIndentationUnitTest.php</file>
-            <file>src/Awyiss/Tests/WhiteSpace/ConstantDeclarationSpacingUnitTest.php</file>
-            <file>src/Awyiss/Tests/WhiteSpace/SemicolonSpacingUnitTest.php</file>
-            <file>src/Awyiss/Tests/WhiteSpace/SingleArgumentNotMultilineUnitTest.php</file>
+        <testsuite name="Janus PHPCS Sniffs">
+            <file>src/Janus/Tests/Arrays/NoInlineCommentedArrayItemUnitTest.php</file>
+            <file>src/Janus/Tests/Classes/ClassMemberSpacingUnitTest.php</file>
+            <file>src/Janus/Tests/Commenting/SeeUsesTagSpacingUnitTest.php</file>
+            <file>src/Janus/Tests/Commenting/VariableCommentUnitTest.php</file>
+            <file>src/Janus/Tests/Functions/ArrowFunctionDeclarationUnitTest.php</file>
+            <file>src/Janus/Tests/Operators/MethodChainingUnitTest.php</file>
+            <file>src/Janus/Tests/WhiteSpace/ArrayUnionIndentationUnitTest.php</file>
+            <file>src/Janus/Tests/WhiteSpace/ConstantDeclarationSpacingUnitTest.php</file>
+            <file>src/Janus/Tests/WhiteSpace/SemicolonSpacingUnitTest.php</file>
+            <file>src/Janus/Tests/WhiteSpace/SingleArgumentNotMultilineUnitTest.php</file>
         </testsuite>
     </testsuites>
     <source>
