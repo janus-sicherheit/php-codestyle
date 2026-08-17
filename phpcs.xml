@@ -152,13 +152,13 @@
 		<exclude-pattern>*/tests/comparisons/config/Migrations/*</exclude-pattern>
 	</rule>
 	<rule ref="SlevomatCodingStandard.Commenting.EmptyComment"/>
-	<rule ref="SlevomatCodingStandard.Commenting.InlineDocCommentDeclaration">
+	<!--<rule ref="SlevomatCodingStandard.Commenting.InlineDocCommentDeclaration">
 		<properties>
 			<property name="allowDocCommentAboveReturn" type="boolean" value="true"/>
 		</properties>
 		<exclude name="SlevomatCodingStandard.Commenting.InlineDocCommentDeclaration.NoAssignment"/>
 		<exclude name="SlevomatCodingStandard.Commenting.InlineDocCommentDeclaration.MissingVariable"/>
-	</rule>
+	</rule>-->
 	<rule ref="SlevomatCodingStandard.ControlStructures.AssignmentInCondition"/>
 	<rule ref="SlevomatCodingStandard.ControlStructures.DisallowContinueWithoutIntegerOperandInSwitch"/>
 	<rule ref="SlevomatCodingStandard.ControlStructures.DisallowYodaComparison"/>
