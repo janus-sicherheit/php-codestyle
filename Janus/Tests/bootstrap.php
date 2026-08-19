@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-$root = dirname(__DIR__, 3);
+$root = dirname(__DIR__, 2);
 
 // Composer autoload
 require_once $root . '/vendor/autoload.php';

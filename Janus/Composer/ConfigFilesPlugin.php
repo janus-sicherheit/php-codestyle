@@ -58,6 +58,11 @@ final class ConfigFilesPlugin implements PluginInterface, EventSubscriberInterfa
 			$sourcePath = $packageRoot . DIRECTORY_SEPARATOR . $file;
 			$targetPath = $projectRoot . DIRECTORY_SEPARATOR . $file;
 
+			if (is_file($targetPath)) {
+				$this->io->write(sprintf('<comment>Skipped existing target file: %s</comment>', $file));
+				continue;
+			}
+
 			if (!is_file($sourcePath)) {
 				$this->io->writeError(sprintf('<warning>Skipped missing source file: %s</warning>', $sourcePath));
 				continue;

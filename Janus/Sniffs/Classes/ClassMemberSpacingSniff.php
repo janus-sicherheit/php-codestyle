@@ -6,19 +6,20 @@ namespace Janus\Sniffs\Classes;
 
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\Sniff;
+use const T_ANON_CLASS;
+use const T_ATTRIBUTE_END;
+use const T_DOC_COMMENT_CLOSE_TAG;
+use const T_ENUM;
+use const T_SEMICOLON;
 
 
 /**
  * Enforces blank line spacing between class members.
  *
- * Constants and methods each form their own group.
- *
- * Property groups are split by static/non-static and by visibility profile. For PHP 8.4 asymmetric visibility this means the
- * read-visibility + set-visibility combination (for example `public|private(set)`) defines the property group.
- *
- * Consecutive members within the same group must have no blank line between them. Members of different groups must be separated by
- * exactly two blank lines. Methods may be separated by one or two blank lines. A doc comment and/or PHP attributes directly
- * preceding a member are treated as part of that member when measuring spacing.
+ * Constants, static properties, and regular properties each form their own group. Consecutive members within the same group must
+ * have no blank line between them. Members of different groups must be separated by exactly two blank lines. Methods may be
+ * separated by one or two blank lines. A doc comment and/or PHP attributes directly preceding a member are treated as part of
+ * that member when measuring spacing.
  */
 class ClassMemberSpacingSniff implements Sniff {
 	/**
@@ -268,7 +269,11 @@ class ClassMemberSpacingSniff implements Sniff {
 				return null;
 			}
 
-			return $this->getPropertyGroup($tokens, $ptr);
+			if ($this->isStaticProperty($tokens, $ptr)) {
+				return self::GROUP_STATIC_PROPERTY;
+			}
+
+			return self::GROUP_PROPERTY;
 		}
 
 		return null;
@@ -348,196 +353,6 @@ class ClassMemberSpacingSniff implements Sniff {
 		}
 
 		return false;
-	}
-
-
-	/**
-	 * Builds the effective property group key.
-	 *
-	 * Properties are grouped by static/non-static and by their
-	 * read+write visibility profile.
-	 *
-	 * @param array<int, array<string, mixed>> $tokens
-	 * @param int $variablePtr
-	 * @return string
-	 */
-	protected function getPropertyGroup(array $tokens, int $variablePtr): string {
-		$groupPrefix = $this->isStaticProperty($tokens, $variablePtr)
-			? self::GROUP_STATIC_PROPERTY
-			: self::GROUP_PROPERTY;
-
-		$visibilityProfile = $this->getPropertyVisibilityProfile($tokens, $variablePtr);
-
-		return sprintf(
-			'%s:%s|%s',
-			$groupPrefix,
-			$visibilityProfile['read'],
-			$visibilityProfile['write']
-		);
-	}
-
-
-	/**
-	 * Extracts read/set visibility for a property declaration.
-	 *
-	 * @param array<int, array<string, mixed>> $tokens
-	 * @param int $variablePtr
-	 * @return array{read: string, write: string}
-	 */
-	protected function getPropertyVisibilityProfile(array $tokens, int $variablePtr): array {
-		$declarationStart = $this->findPropertyDeclarationStart($tokens, $variablePtr);
-
-		$readVisibility = null;
-		$writeVisibility = null;
-		$normalizedDeclaration = '';
-
-		for ($ptr = $declarationStart; $ptr < $variablePtr; $ptr++) {
-			$token = $tokens[ $ptr ];
-			$code = $token['code'];
-
-			if ($code === T_WHITESPACE) {
-				continue;
-			}
-
-			$normalizedDeclaration .= strtolower($token['content']);
-
-			if ($readVisibility === null) {
-				$readVisibility = $this->getReadVisibilityFromTokenCode($code);
-			}
-
-			if ($writeVisibility === null) {
-				$writeVisibility = $this->getWriteVisibilityFromToken($token);
-			}
-		}
-
-		if ($writeVisibility === null) {
-			$writeVisibility = $this->getWriteVisibilityFromDeclarationContent($normalizedDeclaration);
-		}
-
-		$readVisibility ??= 'unknown';
-		$writeVisibility ??= $readVisibility;
-
-		return [
-			'read' => $readVisibility,
-			'write' => $writeVisibility,
-		];
-	}
-
-
-	/**
-	 * Finds the start pointer of the current property declaration.
-	 *
-	 * @param array<int, array<string, mixed>> $tokens
-	 * @param int $variablePtr
-	 * @return int
-	 */
-	protected function findPropertyDeclarationStart(array $tokens, int $variablePtr): int {
-		$start = $variablePtr;
-
-		for ($ptr = $variablePtr - 1; isset($tokens[ $ptr ]); $ptr--) {
-			if (in_array($tokens[ $ptr ]['code'], self::MEMBER_START_BOUNDARY_TOKENS, true)) {
-				break;
-			}
-
-			$start = $ptr;
-		}
-
-		return $start;
-	}
-
-
-	/**
-	 * Maps read-visibility token codes to their canonical name.
-	 *
-	 * @param string|int $code
-	 * @return string|null
-	 */
-	protected function getReadVisibilityFromTokenCode(string|int $code): ?string {
-		if (
-			$code === T_PUBLIC
-			|| $code === 'T_PUBLIC'
-			|| $code === T_VAR
-			|| $code === 'T_VAR'
-		) {
-			return 'public';
-		}
-
-		if (
-			$code === T_PROTECTED
-			|| $code === T_PRIVATE
-		) {
-			return 'protected';
-		}
-
-		if (
-			$code === T_PRIVATE
-			|| $code === T_PUBLIC
-		) {
-			return 'private';
-		}
-
-		return null;
-	}
-
-
-	/**
-	 * Reads write-visibility from a single token where available.
-	 *
-	 * @param array<string, mixed> $token
-	 * @return string|null
-	 */
-	protected function getWriteVisibilityFromToken(array $token): ?string {
-		$code = $token['code'];
-		$content = strtolower((string) $token['content']);
-
-		if (defined('T_PUBLIC_SET') && $code === constant('T_PUBLIC_SET')) {
-			return 'public';
-		}
-
-		if (defined('T_PROTECTED_SET') && $code === constant('T_PROTECTED_SET')) {
-			return 'protected';
-		}
-
-		if (defined('T_PRIVATE_SET') && $code === constant('T_PRIVATE_SET')) {
-			return 'private';
-		}
-
-		if ($content === 'public(set)') {
-			return 'public';
-		}
-
-		if ($content === 'protected(set)') {
-			return 'protected';
-		}
-
-		if ($content === 'private(set)') {
-			return 'private';
-		}
-
-		return null;
-	}
-
-
-	/**
-	 * Fallback parser for token streams that do not expose *_SET tokens.
-	 *
-	 * @param string $normalizedDeclaration
-	 * @return string|null
-	 */
-	protected function getWriteVisibilityFromDeclarationContent(string $normalizedDeclaration): ?string {
-		if (str_contains($normalizedDeclaration, 'public(set)')) {
-			return 'public';
-		}
-
-		if (str_contains($normalizedDeclaration, 'protected(set)')) {
-			return 'protected';
-		}
-
-		if (str_contains($normalizedDeclaration, 'private(set)')) {
-			return 'private';
-		}
-
-		return null;
 	}
 
 

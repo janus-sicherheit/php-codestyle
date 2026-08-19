@@ -537,7 +537,7 @@ ij_php_blank_lines_after_function = 2
 ij_php_blank_lines_after_imports = 2
 ij_php_blank_lines_after_opening_tag = 2
 ij_php_blank_lines_after_package = 2
-ij_php_blank_lines_around_class = 1
+ij_php_blank_lines_around_class = 2
 ij_php_blank_lines_around_constants = 0
 ij_php_blank_lines_around_enum_cases = 0
 ij_php_blank_lines_around_field = 0
@@ -818,7 +818,6 @@ ij_markdown_wrap_text_inside_blockquotes = true
 ij_visual_guides = 
 
 [{*.yaml,*.yml}]
-indent_size = 2
 ij_visual_guides = 
 ij_yaml_align_values_properties = do_not_align
 ij_yaml_autoinsert_sequence_marker = true
