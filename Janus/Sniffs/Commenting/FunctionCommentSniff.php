@@ -147,6 +147,10 @@ class FunctionCommentSniff extends PEARFunctionCommentSniff {
 					// return statement somewhere in the function that returns something.
 					if (isset($tokens[ $stackPtr ]['scope_closer']) === true) {
 						$endToken = $tokens[ $stackPtr ]['scope_closer'];
+						$hasReturn = false;
+						$hasGeneratorYield = false;
+						$voidReturnToken = null;
+
 						for ($returnToken = $stackPtr; $returnToken < $endToken; $returnToken++) {
 							if (
 								$tokens[ $returnToken ]['code'] === T_CLOSURE
@@ -156,42 +160,51 @@ class FunctionCommentSniff extends PEARFunctionCommentSniff {
 								continue;
 							}
 
-							if (
-								$tokens[ $returnToken ]['code'] === T_RETURN
-								|| $tokens[ $returnToken ]['code'] === T_YIELD
-								|| $tokens[ $returnToken ]['code'] === T_YIELD_FROM
-							) {
-								break;
+							if ($tokens[ $returnToken ]['code'] === T_YIELD || $tokens[ $returnToken ]['code'] === T_YIELD_FROM) {
+								$hasGeneratorYield = true;
+								continue;
+							}
+
+							if ($tokens[ $returnToken ]['code'] === T_RETURN) {
+								$hasReturn = true;
+								$semicolon = $phpcsFile->findNext(T_WHITESPACE, $returnToken + 1, null, true);
+
+								if ($tokens[ $semicolon ]['code'] === T_SEMICOLON && $voidReturnToken === null) {
+									$voidReturnToken = $returnToken;
+								}
 							}
 						}
 
-						if ($returnToken === $endToken) {
-							$error = 'Function return type is not void, but function has no return statement';
-							$phpcsFile->addError($error, $return, 'InvalidNoReturn');
-						}
-						else {
-							$semicolon = $phpcsFile->findNext(T_WHITESPACE, $returnToken + 1, null, true);
-							if ($tokens[ $semicolon ]['code'] === T_SEMICOLON) {
+						if ($hasGeneratorYield === false) {
+							if ($hasReturn === false) {
+								$error = 'Function return type is not void, but function has no return statement';
+								$phpcsFile->addError($error, $return, 'InvalidNoReturn');
+							}
+							elseif ($voidReturnToken !== null) {
 								$error = 'Function return type is not void, but function is returning void here';
-								$phpcsFile->addError($error, $returnToken, 'InvalidReturnNotVoid');
+								$phpcsFile->addError($error, $voidReturnToken, 'InvalidReturnNotVoid');
 							}
 						}
 					}
 				}
 			}
+
+			return;
 		}
-		else {
-			if (
-				$isSpecialMethod === true
-				// If @inheritDoc is used, we don't need a return tag.
-				|| $this->checkInheritdoc($phpcsFile, $stackPtr, $commentStart) === true
-			) {
+
+		if ($isSpecialMethod === true) {
+			return;
+		}
+
+		// If there's any @inheritDoc inside, we don't need to check for missing comments.
+		foreach ($tokens[ $commentStart ]['comment_tags'] as $tag) {
+			if (strtolower($tokens[ $tag ]['content']) === '@inheritdoc') {
 				return;
 			}
-
-			$error = 'Missing @return tag in function comment';
-			$phpcsFile->addError($error, $tokens[ $commentStart ]['comment_closer'], 'MissingReturn');
 		}
+
+		$error = 'Missing @return tag in function comment';
+		$phpcsFile->addError($error, $tokens[ $commentStart ]['comment_closer'], 'MissingReturn');
 	}
 
 
@@ -423,17 +436,18 @@ class FunctionCommentSniff extends PEARFunctionCommentSniff {
 
 				// Check type hint for array and custom type.
 				$suggestedTypeHint = '';
-				if (strpos($suggestedName, 'array') !== false || substr($suggestedName, -2) === '[]') {
+				if (str_contains($suggestedName, 'array') || str_ends_with($suggestedName, '[]')) {
 					$suggestedTypeHint = 'array';
 				}
-				elseif (strpos($suggestedName, 'callable') !== false) {
+				elseif (str_contains($suggestedName, 'callable')) {
 					$suggestedTypeHint = 'callable';
 				}
-				elseif (strpos($suggestedName, 'callback') !== false) {
+				elseif (str_contains($suggestedName, 'callback')) {
 					$suggestedTypeHint = 'callable';
 				}
 				elseif (isset(Common::ALLOWED_TYPES[ $suggestedName ]) === false) {
-					$suggestedTypeHint = $suggestedName;
+					// Generic arguments describe the PHPDoc type but are not part of the native type hint.
+					$suggestedTypeHint = preg_replace('/<.*>$/', '', $suggestedName);
 				}
 
 				if ($this->phpVersion >= 70000) {
@@ -468,6 +482,9 @@ class FunctionCommentSniff extends PEARFunctionCommentSniff {
 
 					// Remove namespace prefixes when comparing.
 					$compareTypeHint = substr($suggestedTypeHint, (strlen($typeHint) * -1));
+					$resolvedSuggestedTypeHint = $this->resolveTypeHint($phpcsFile, $stackPtr, $suggestedTypeHint);
+					$resolvedTypeHint = $this->resolveTypeHint($phpcsFile, $stackPtr, $typeHint);
+					$typeHintsMatch = strtolower(ltrim($resolvedSuggestedTypeHint, '\\')) === strtolower(ltrim($resolvedTypeHint, '\\'));
 
 					if ($typeHint === '') {
 						$error = 'Type hint "%s" missing for %s';
@@ -488,7 +505,11 @@ class FunctionCommentSniff extends PEARFunctionCommentSniff {
 
 						$phpcsFile->addError($error, $stackPtr, $errorCode, $data);
 					}
-					elseif ($typeHint !== $compareTypeHint && $typeHint !== '?' . $compareTypeHint) {
+					elseif (
+						$typeHintsMatch === false
+						&& $typeHint !== $compareTypeHint
+						&& $typeHint !== '?' . $compareTypeHint
+					) {
 						$error = 'Expected type hint "%s"; found "%s" for %s';
 						$data = [
 							$suggestedTypeHint,
@@ -606,7 +627,7 @@ class FunctionCommentSniff extends PEARFunctionCommentSniff {
 					$phpcsFile->addError($error, $param['tag'], $code, $data);
 				}
 			}
-			elseif (substr($param['var'], -4) !== ',...') {
+			elseif (!str_ends_with($param['var'], ',...')) {
 				// We must have an extra parameter comment.
 				$error = 'Superfluous parameter comment';
 				$phpcsFile->addError($error, $param['tag'], 'ExtraParamComment');
@@ -619,22 +640,23 @@ class FunctionCommentSniff extends PEARFunctionCommentSniff {
 			// Check number of spaces after the var name.
 			$this->checkSpacingAfterParamName($phpcsFile, $param);
 
-			// Param comments must start with a capital letter and end with a full stop.
+			// Param comments must start with a capital letter
 			if (preg_match('/^(\p{Ll}|\P{L})/u', $param['comment']) === 1) {
 				$error = 'Parameter comment must start with a capital letter';
 				$phpcsFile->addError($error, $param['tag'], 'ParamCommentNotCapital');
-			}
-
-			$lastChar = substr($param['comment'], -1);
-			if ($lastChar !== '.') {
-				$error = 'Parameter comment must end with a full stop';
-				$phpcsFile->addError($error, $param['tag'], 'ParamCommentFullStop');
 			}
 		}
 
 		$realNames = [];
 		foreach ($realParams as $realParam) {
 			$realNames[] = $realParam['name'];
+		}
+
+		// If there's any @inheritDoc inside, we don't need to check for missing comments.
+		foreach ($tokens[ $commentStart ]['comment_tags'] as $tag) {
+			if (strtolower($tokens[ $tag ]['content']) === '@inheritdoc') {
+				return;
+			}
 		}
 
 		// Report missing comments.
@@ -648,10 +670,10 @@ class FunctionCommentSniff extends PEARFunctionCommentSniff {
 
 
 	/**
-	 * Check that @param, @return and @throws tags appear in the expected relative order.
+	 * Check that `@param`, `@return` and `@throws` tags appear in the expected relative order.
 	 *
-	 * All @param tags must come before the @return tag, which in turn must come before any @throws
-	 * tags. Other tags (e.g. @param tag against the real parameter at the same position and reports a name mismatch when the
+	 * All `@param` tags must come before the @return tag, which in turn must come before any @throws
+	 * tags. Other tags (e.g. `@param` tag against the real parameter at the same position and reports a name mismatch when the
 	 * order is wrong.
 	 *
 	 * @param \PHP_CodeSniffer\Files\File $phpcsFile The file being scanned.
@@ -698,11 +720,11 @@ class FunctionCommentSniff extends PEARFunctionCommentSniff {
 
 
 	/**
-	 * Check the spacing after the type of a parameter.
+	 * Check the spacing after the type of parameter.
 	 *
 	 * Param lists are intentionally not column-aligned across the tags of a single docblock, so the
 	 * expected spacing is always the fixed amount given in $spacing, regardless of the length of the
-	 * type or of any other @param tag in the same comment.
+	 * type or of any other `@param` tag in the same comment.
 	 *
 	 * @param \PHP_CodeSniffer\Files\File $phpcsFile The file being scanned.
 	 * @param array $param The parameter to be checked.
@@ -759,7 +781,7 @@ class FunctionCommentSniff extends PEARFunctionCommentSniff {
 	/**
 	 * Check the spacing after the name of a parameter.
 	 *
-	 * Like the type spacing above, this is intentionally not column-aligned across the @param tags of
+	 * Like the type spacing above, this is intentionally not column-aligned across the `@param` tags of
 	 * a single docblock; the expected spacing is always the fixed amount given in $spacing.
 	 *
 	 * @param \PHP_CodeSniffer\Files\File $phpcsFile The file being scanned.
@@ -820,9 +842,9 @@ class FunctionCommentSniff extends PEARFunctionCommentSniff {
 	 * @param \PHP_CodeSniffer\Files\File $phpcsFile The file being scanned.
 	 * @param int $stackPtr The position of the current token the stack passed in $tokens.
 	 * @param int $commentStart The position in the stack where the comment started.
-	 * @return bool TRUE if the docblock contains only {@inheritdoc} (case-insensitive).
+	 * @return bool TRUE if the docblock contains only `@inheritdoc` (case-insensitive).
 	 */
-	protected function checkInheritdoc(File $phpcsFile, int $stackPtr, int $commentStart) {
+	protected function checkInheritdoc(File $phpcsFile, int $stackPtr, int $commentStart): bool {
 		$tokens = $phpcsFile->getTokens();
 
 		$allowedTokens = [
@@ -832,17 +854,73 @@ class FunctionCommentSniff extends PEARFunctionCommentSniff {
 		];
 		for ($i = $commentStart; $i <= $tokens[ $commentStart ]['comment_closer']; $i++) {
 			if (in_array($tokens[ $i ]['code'], $allowedTokens, true) === false) {
-				$trimmedContent = strtolower(trim($tokens[ $i ]['content']));
-				return in_array($trimmedContent, [
-					'{@inheritdoc}',
-					'{@inheritDoc}',
-					'@inheritdoc',
-					'@inheritDoc',
-				], true);
+				return str_contains(strtolower(trim($tokens[ $i ]['content'])), '@inheritdoc');
 			}
 		}
 
 		return false;
+	}
+
+
+	/**
+	 * Resolves a native type hint or PHPDoc type through imported class aliases.
+	 *
+	 * @param \PHP_CodeSniffer\Files\File $phpcsFile The file being scanned.
+	 * @param int $stackPtr The position of the current token in the stack passed in $tokens.
+	 * @param string $typeHint The type hint to resolve.
+	 * @return string
+	 */
+	protected function resolveTypeHint(File $phpcsFile, int $stackPtr, string $typeHint): string {
+		$normalizedTypeHint = ltrim($typeHint, '?\\');
+		$aliases = $this->getTypeAliases($phpcsFile, $stackPtr);
+
+		return $aliases[ $normalizedTypeHint ] ?? $normalizedTypeHint;
+	}
+
+
+	/**
+	 * Gets class aliases imported before a declaration.
+	 *
+	 * @param \PHP_CodeSniffer\Files\File $phpcsFile The file being scanned.
+	 * @param int $stackPtr The position of the current token in the stack passed in $tokens.
+	 * @return array<string, string>
+	 */
+	protected function getTypeAliases(File $phpcsFile, int $stackPtr): array {
+		$tokens = $phpcsFile->getTokens();
+		$aliases = [];
+
+		for ($tokenPtr = 0; $tokenPtr < $stackPtr; $tokenPtr++) {
+			if ($tokens[ $tokenPtr ]['code'] !== T_USE) {
+				continue;
+			}
+
+			$statement = '';
+			for ($statementPtr = $tokenPtr + 1; $statementPtr < $stackPtr; $statementPtr++) {
+				if ($tokens[ $statementPtr ]['code'] === T_SEMICOLON) {
+					break;
+				}
+
+				$statement .= $tokens[ $statementPtr ]['content'];
+			}
+
+			foreach (preg_split('/\s*,\s*/', trim($statement)) ?: [] as $import) {
+				if (preg_match('/^(?:function|const)\s/i', $import) === 1) {
+					continue;
+				}
+
+				if (preg_match('/^\\\\?([a-z_][a-z0-9_\\\\]*)(?:\s+as\s+([a-z_][a-z0-9_]*))?$/i', $import, $matches) !== 1) {
+					continue;
+				}
+
+				$importedType = ltrim($matches[1], '\\');
+				$alias = $matches[2] ?? substr($importedType, strrpos($importedType, '\\') + 1);
+				$aliases[ $alias ] = $importedType;
+			}
+
+			$tokenPtr = $statementPtr;
+		}
+
+		return $aliases;
 	}
 
 
